@@ -19,7 +19,7 @@ defrecord Relex.App, name: nil, version: nil, path: nil, app: nil, type: :perman
         case :ets.lookup(__MODULE__, key) do
           [{_, app}] -> app
           _ ->
-            {:ok, [app]} = :file.consult(Path.join([path(rec),"ebin","#{name}.app"]))
+            {:ok, [app]} = :file.consult(Path.join([path(rec), "ebin", "#{name}.app"]))
             :ets.insert(__MODULE__, {key, app})
             app
         end
@@ -37,24 +37,24 @@ defrecord Relex.App, name: nil, version: nil, path: nil, app: nil, type: :perman
           _ ->
             paths = code_path
             paths = Enum.filter(paths, fn(p) -> File.exists?(Path.join([p, "#{name}.app"])) end)
-            paths = lc path inlist paths, do: Path.join(path, "..")
+            paths = for path <- paths, do: Path.join(path, "..")
             result =
             case paths do
-             [] -> raise NotFound, app: rec
-             [path] ->
-               if version_matches?(version, path(path, rec)) do
-                 path
-               else
-                 raise NotFound, app: rec
-               end
+              [] -> raise NotFound, app: rec
+              [path] ->
+                if version_matches?(version, path(path, rec)) do
+                  path
+                else
+                  raise NotFound, app: rec
+                end
              _ ->
-               apps =
-               lc path inlist paths do
-                 update([path: path], rec)
-               end
-               apps = Enum.filter(apps, fn(app) -> version_matches?(version, app) end)
-               apps = Enum.sort(apps, fn(app1, app2) -> version(app2) <= version(app1) end)
-               path(hd(apps))
+                apps =
+                for path <- paths do
+                  update([path: path], rec)
+                end
+                apps = Enum.filter(apps, fn(app) -> version_matches?(version, app) end)
+                apps = Enum.sort(apps, fn(app1, app2) -> version(app2) <= version(app1) end)
+                path(hd(apps))
             end
             :ets.insert(__MODULE__, {{:path, {name, version}}, result})
             result
@@ -81,12 +81,12 @@ defrecord Relex.App, name: nil, version: nil, path: nil, app: nil, type: :perman
   end
 
   def dependencies(rec) do
-    (lc app inlist (keys(rec)[:applications] || []), do: code_path(code_path(rec), new(app))) ++
+    (for app <- (keys(rec)[:applications] || []), do: code_path(code_path(rec), new(app))) ++
     included_applications(rec)
   end
 
   def included_applications(rec) do
-    lc app inlist (keys(rec)[:included_applications] || []), do: code_path(code_path(rec), new(app))
+    for app <- (keys(rec)[:included_applications] || []), do: code_path(code_path(rec), new(app))
   end
 
   defp keys(rec) do
