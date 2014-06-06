@@ -91,7 +91,7 @@ defrecord Relex.App, name: nil, version: nil, path: nil, app: nil, type: :perman
 
   defp keys(rec) do
     {:application, _, opts} = app(rec)
-    Keyword.from_enum(opts)
+    Enum.to_list(opts)
   end
 
 end
@@ -100,11 +100,11 @@ defimpl Inspect, for: Relex.App do
   def inspect(Relex.App[name: name, version: version], _opts) do
     cond do
       is_record(version, Regex) ->
-       version = inspect(version)
+        version = inspect(version)
       is_function(version) ->
-       version = "<version checked by #{inspect(version)}>"
+        version = "<version checked by #{inspect(version)}>"
       true ->
-       :ok
+        :ok
     end
     version = if nil?(version), do: "", else: "-#{version}"
     "#{name}#{version}"
